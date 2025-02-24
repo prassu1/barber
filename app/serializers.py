@@ -1,12 +1,18 @@
 from django.contrib.auth import authenticate
 from rest_framework import serializers
-from . models import CustomUser
+from . models import CustomUser 
 from rest_framework.exceptions import AuthenticationFailed
 from rest_framework_simplejwt.tokens import RefreshToken,TokenError
 from barber import settings
 from django.core.exceptions import ValidationError
 from django.contrib.auth import password_validation
 from django.contrib.auth import get_user_model
+from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
+from .models import Booking,Service
+from decimal import Decimal
+
 
 
 
@@ -90,11 +96,73 @@ class ForgotPasswordSerializer(serializers.Serializer):
     email = serializers.EmailField(required=True)
     
     def validate_email(self, value):
-        """Optional validation logic for email."""
+        print(value)
         User = get_user_model()
+        print(User)
         try:
             user = User.objects.get(email=value)
         except User.DoesNotExist:
             raise serializers.ValidationError("Email not found.")
         return value
+
+class ResetPasswordSerializer(serializers.Serializer):
+    new_password = serializers.CharField(write_only=True, required=True)
+    confirm_password = serializers.CharField(write_only=True, required=True)
+    def validate(self, data):
+        if data['new_password'] != data['confirm_password']:
+            raise serializers.ValidationError("Passwords do not match.")
+        return data
+
+class UserProfileSerializer(serializers.ModelSerializer):
+   class Meta:
+        model = CustomUser  
+        fields = ['username', 'email'] 
+    
+    
+
+class ServiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Service
+        fields = ['id', 'name', 'price']
+
+
+class BookingSerializer(serializers.ModelSerializer):
+    service = serializers.PrimaryKeyRelatedField(queryset=Service.objects.all())  
+    class Meta:
+        model = Booking
+        fields = ['id', 'service', 'frequency', 'duration', 'total_cost']
+    
+    def create(self, validated_data):
+        service = validated_data.get('service')  
+        frequency = validated_data['frequency']
+        duration = validated_data['duration']
+        total_cost = self.calculate_total_cost(service, frequency, duration)
         
+        booking = Booking.objects.create(
+            service=service,
+            frequency=frequency,
+            duration=duration,
+            total_cost=total_cost
+        )
+        return booking
+
+    def calculate_total_cost(self, service, frequency, duration):
+        discount = Decimal('0.10') if duration >= 3 else Decimal('0.00')  
+        if frequency == 'weekly':
+            total_sessions = duration * 4  
+        elif frequency == 'bi-weekly':
+            total_sessions = duration * 2  
+        elif frequency == 'monthly':
+            total_sessions = duration 
+        
+        total_cost = Decimal(service.price) * Decimal(total_sessions)  
+        total_cost *= (Decimal('1.00') - discount)  
+        return total_cost
+
+
+
+    
+    
+            
+        
+

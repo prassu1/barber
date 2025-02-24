@@ -42,6 +42,13 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'rest_framework.authtoken',
     'rest_framework_simplejwt.token_blacklist',
+    'django.contrib.sites',  
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',
+    
+    
     
 ]
 
@@ -53,6 +60,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allauth.account.middleware.AccountMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware', 
 ]
 
 ROOT_URLCONF = 'barber.urls'
@@ -136,6 +145,7 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    
 }
 
 SIMPLE_JWT = {
@@ -143,11 +153,28 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME' : datetime.timedelta(days=1),
 }
 
-
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-EMAIL_HOST = 'smpt.gmail.com'
+EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'bollaprasanna76@gmail.com'
-EMAIL_HOST_PASSWORD = 'dkju ecid bzrc fcsj'
+EMAIL_HOST_PASSWORD = 'ptuq ymkw qdwn kpwb'
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 EMAIL_PORT = 587
+
+
+
+GOOGLE_CLIENT_ID = "54126358170-auqn5doqc1m4fo96ngfitjnmbndkofjj.apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET = "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"
+GOOGLE_REDIRECT_URI = "http://127.0.0.1:8000/app/auth/google/callback/"
+GOOGLE_AUTHORIZATION_URL = "https://accounts.google.com/o/oauth2/v2/auth"
+GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
+GOOGLE_USER_INFO_URL = "https://www.googleapis.com/oauth2/v1/userinfo"
+
+AUTHENTICATION_BACKENDS = (
+    'django.contrib.auth.backends.ModelBackend',  # Default authentication backend
+    'allauth.account.auth_backends.AuthenticationBackend',  # Django Allauth backend
+)
+
+
+
+SESSION_COOKIE_AGE = 3600  
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False

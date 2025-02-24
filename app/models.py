@@ -2,7 +2,6 @@ from django.db import models
 from django.contrib.auth.models import PermissionsMixin
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.utils import timezone
-# Create your models here.
 
 
 #custom user manager
@@ -29,9 +28,8 @@ class CustomUser(AbstractBaseUser,PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_superuser=models.BooleanField(default=False)
-
-    # Optional additional fields for user
-
+   
+    
     USERNAME_FIELD = 'username'  
     REQUIRED_FIELDS = ['email']  
 
@@ -39,7 +37,41 @@ class CustomUser(AbstractBaseUser,PermissionsMixin):
 
     def __str__(self):
         return self.username
+
+
+
+class Service(models.Model):
+    name = models.CharField(max_length=100)
+    price = models.DecimalField(max_digits=8, decimal_places=2)
+
+    def __str__(self):
+        return self.name
     
+class Booking(models.Model):
+    service = models.ForeignKey(Service, related_name="bookings", on_delete=models.CASCADE)
+    frequency = models.CharField(max_length=255)
+    duration = models.IntegerField()
+    total_cost = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    frequency_choices = [
+        ('weekly', 'Weekly'),
+        ('bi-weekly', 'Bi-weekly'),
+        ('monthly', 'Monthly'),
+    ]
+    frequency = models.CharField(max_length=10, choices=frequency_choices)
+    
+    duration_choices = [
+        (3, '3 Months'),
+        (6, '6 Months'),
+    ]
+    duration = models.IntegerField(choices=duration_choices)
+    
+    total_cost = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+
+    def __str__(self):
+        return f"{self.service.name} - {self.frequency} for {self.duration} months"
+
+ 
 
 
     
