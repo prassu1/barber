@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import HttpResponse
 from . serializers import UserRegistrationSerializer,UserLoginSerializer,UserLogoutSerializer,ChangePasswordSerializer,ForgotPasswordSerializer,ResetPasswordSerializer,UserProfileSerializer
-from .serializers import ServiceSerializer, BookingSerializer
+from .serializers import ServiceSerializer, BookingSerializer, PaymentSerializer, AppointmentBookingSerializer
 from rest_framework import generics
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import authenticate, update_session_auth_hash
@@ -22,7 +22,9 @@ from django.contrib.auth import login
 from app.models import CustomUser
 from rest_framework import permissions
 from .serializers import BookingSerializer
-from .models import Service, Booking
+from .models import Service, Booking, Payment
+
+
 
 
 
@@ -225,5 +227,36 @@ class BookingCreateView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class PaymentCreateView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = PaymentSerializer(data=request.data)
+        if serializer.is_valid():
+            payment = serializer.save()
+            return Response(PaymentSerializer(payment).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class AppointmentBookingView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = AppointmentBookingSerializer(data=request.data)
+        if serializer.is_valid():
+            response = serializer.save()
+            return Response(response, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def delete(self, request, *args, **kwargs):
+        appointment_id = request.data.get("appointment_id")
+        if not appointment_id:
+            return Response({'message': 'Appointment ID is required for cancellation.'}, status=status.HTTP_400_BAD_REQUEST)
+        serializer = AppointmentBookingSerializer()
+        response = serializer.cancel_appointment(appointment_id)
+        if 'appointment_id' in response:
+            return Response(response, status=status.HTTP_200_OK) 
+        return Response(response, status=status.HTTP_404_NOT_FOUND)
+    
+
+
+
+
+
+            
 
